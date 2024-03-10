@@ -55,7 +55,8 @@ class Cube:
         self.walls = walls
 
     def build_centers(self):
-        pass
+        centers_grid = [wall.parts[1:self.dim - 1, 1:self.dim - 1] for wall in self.walls]
+        self.centers = [Piece(center) for center in centers_grid.flatten()]
 
     def get_walls_order(self, wall_name, num_rotation=0):
         letters_order = const.wall_lists[wall_name]
@@ -114,7 +115,6 @@ class Cube:
         return external_edges
 
     def build_corners(self):
-        pass
 
     def find_wall(self, wall_name):
         for wall in self.walls:
