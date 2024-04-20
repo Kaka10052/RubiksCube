@@ -41,3 +41,11 @@ letter2wall = {
     'R': RIGHT_WALL,
     'L': LEFT_WALL
 }
+wall2letter = {
+    FRONT_WALL: 'F',
+    BACK_WALL: 'B',
+    UP_WALL: 'U',
+    DOWN_WALL: 'D',
+    RIGHT_WALL: 'F',
+    LEFT_WALL: 'L'
+}

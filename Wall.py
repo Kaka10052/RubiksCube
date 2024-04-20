@@ -1,7 +1,7 @@
 import numpy as np
 from Piece import Piece
 import constants as const
-
+from Move import Move
 
 class Wall:
     def __init__(self, parts, name, dimension):
@@ -26,10 +26,10 @@ class Wall:
                       f"or all the pieces have the same wall name as {self.name}"
             raise Exception(err_msg)
 
-    def rotate(self, move):
+    def rotate(self, move: Move):
         # TODO decide how to rotate a wall. Do I want to use some kind of matrix? Or is it better to use np.array?
         axes = (1, 0) if not move.is_reverse else (0, 1)
-        self.parts = np.rot90(self.parts, move.n_rotations, axes=axes)
+        self.parts = np.rot90(self.parts, move.num_rotations, axes=axes)
 
     def get_correct_wall_name(self, name_to_check):
         name_to_check = name_to_check.upper()
@@ -62,4 +62,5 @@ class Wall:
     def get_inner_edges_parts(self, side_order=const.wall_lists[const.FRONT_WALL]):
         return [edge for side in side_order for edge in self.get_side_edges(side)]
 
-
+    def get_corners(self):
+        return [self.parts[x, y] for x in (0, -1) for y in (0, -1)]
