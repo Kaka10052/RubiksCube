@@ -8,7 +8,7 @@ BACK_WALL = 'BACK'
 set_correct_wall_names = {LEFT_WALL, RIGHT_WALL, UP_WALL, DOWN_WALL, FRONT_WALL, BACK_WALL}
 wall_lists = {
     FRONT_WALL: ['U', 'R', 'D', 'L'],
-    BACK_WALL:  ['U', 'L', 'D', 'R'],
+    BACK_WALL:  ['D', 'R', 'U', 'L'],
     UP_WALL:    ['F', 'L', 'B', 'R'],
     DOWN_WALL:  ['F', 'R', 'B', 'L'],
     LEFT_WALL:  ['F', 'D', 'B', 'U'],
@@ -46,6 +46,6 @@ wall2letter = {
     BACK_WALL: 'B',
     UP_WALL: 'U',
     DOWN_WALL: 'D',
-    RIGHT_WALL: 'F',
+    RIGHT_WALL: 'R',
     LEFT_WALL: 'L'
 }

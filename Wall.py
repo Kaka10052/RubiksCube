@@ -1,11 +1,12 @@
 import numpy as np
 from Piece import Piece
+from Part import Part
 import constants as const
 from Move import Move
 
 class Wall:
     def __init__(self, parts, name, dimension):
-        self.parts = parts
+        self.parts: np.array() = parts
         self.name = name
         self.dim = dimension
         self.is_correct()
@@ -17,7 +18,7 @@ class Wall:
         # TODO consider making this method more general and adding to Piece
         wall_piece = Piece(self.parts)
         wrong_n_parts = wall_piece.n_parts != self.dim**2
-        set_wall_names = set(wall_piece.wall_names)
+        set_wall_names = set(wall_piece.get_wall_names())
         wrong_wall_name = len(set_wall_names) != 1 and self.name not in set_wall_names
         wrong_data = wrong_n_parts or wrong_wall_name
 
@@ -26,10 +27,15 @@ class Wall:
                       f"or all the pieces have the same wall name as {self.name}"
             raise Exception(err_msg)
 
+    def update_parts_cords(self):
+        for row_i in range(self.dim):
+            for col_i in range(self.dim):
+                part_to_rotate: Part = self.parts[row_i, col_i]
+                part_to_rotate.wall_cords = (row_i, col_i)
     def rotate(self, move: Move):
-        # TODO decide how to rotate a wall. Do I want to use some kind of matrix? Or is it better to use np.array?
         axes = (1, 0) if not move.is_reverse else (0, 1)
         self.parts = np.rot90(self.parts, move.num_rotations, axes=axes)
+        self.update_parts_cords()
 
     def get_correct_wall_name(self, name_to_check):
         name_to_check = name_to_check.upper()
@@ -64,3 +70,28 @@ class Wall:
 
     def get_corners(self):
         return [self.parts[x, y] for x in (0, -1) for y in (0, -1)]
+
+    def get_segment_to_replace(self):
+        for i in (0, -1):
+            segments = [self.parts[i, :].flatten(), self.parts[:, i].flatten()]
+            for segment in segments:
+                wall_names = set(part.wall_name for part in segment)
+                if len(wall_names) == 1 and wall_names.pop() != self.name:
+                    return segment
+        print("All segments are correct")
+        return
+
+    def replace_segment(self, new_segment):
+        for i in (0, -1):
+            # replace row
+            segment = self.parts[i, :]
+            wall_names = set(part.wall_name for part in segment)
+            if len(wall_names) == 1 and wall_names.pop() != self.name:
+                self.parts[i, :] = new_segment
+                break
+            # replace column
+            segment = self.parts[:, i]
+            wall_names = set(part.wall_name for part in segment)
+            if len(wall_names) == 1 and wall_names.pop() != self.name:
+                self.parts[:, i] = new_segment
+                break

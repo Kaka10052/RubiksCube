@@ -52,8 +52,12 @@ class Cube:
         walls = []
         for wall_name in set_correct_wall_names:
             color = walls_to_colors[wall_name]
-            wall_pieces = [[Part(color, wall_name) for _ in range(self.dim)] for _ in range(self.dim)]
-            wall = Wall(np.array(wall_pieces), wall_name, self.dim)
+            wall_parts = np.array([[Part(color, wall_name, (row_i, col_i)) for row_i in range(self.dim)]
+                           for col_i in range(self.dim)])
+            for part in wall_parts.flatten():
+                row_i, col_i = part.wall_cords
+                wall_parts[row_i, col_i] = part
+            wall = Wall(wall_parts, wall_name, self.dim)
             walls.append(wall)
         self.walls = walls
 
@@ -94,10 +98,10 @@ class Cube:
 
     def build_edges_back(self):
         back_wall = self.find_wall(const.BACK_WALL)
-        inner_sides_order = self.get_walls_order(const.FRONT_WALL)
         external_walls_order = self.get_walls_order(const.BACK_WALL)
-        external_edges = self.get_external_edges(external_walls_order)
-        inner_edges = back_wall.get_inner_edges_parts(side_order=inner_sides_order)
+        external_sides_order = external_walls_order
+        external_edges = self.get_external_edges(external_walls_order, external_sides_order)
+        inner_edges = back_wall.get_inner_edges_parts()
         back_edges = self.connect_edges(external_edges, inner_edges)
         return back_edges
 
@@ -112,10 +116,10 @@ class Cube:
         up_left_side = up_wall.get_side_edges(const.LEFT_WALL)
         down_right_side = down_wall.get_side_edges(const.RIGHT_WALL)
         down_left_side = down_wall.get_side_edges(const.LEFT_WALL)
-        right_up_side = right_wall.get_side_edges(const.LEFT_WALL)
-        right_down_side = right_wall.get_side_edges(const.LEFT_WALL)
-        left_up_side = left_wall.get_side_edges(const.LEFT_WALL)
-        left_down_side = left_wall.get_side_edges(const.LEFT_WALL)
+        right_up_side = right_wall.get_side_edges(const.UP_WALL)
+        right_down_side = right_wall.get_side_edges(const.DOWN_WALL)
+        left_up_side = left_wall.get_side_edges(const.UP_WALL)
+        left_down_side = left_wall.get_side_edges(const.DOWN_WALL)
         mid_edges.extend(self.connect_edges(up_right_side, right_up_side))
         mid_edges.extend(self.connect_edges(up_left_side, left_up_side))
         mid_edges.extend(self.connect_edges(down_right_side, right_down_side))
@@ -128,8 +132,9 @@ class Cube:
                        for inner_edge, external_edge in zip(inner_edges, external_edges)]
         return connected_edges
 
-    def get_external_edges(self, external_walls_order):
-        external_sides_order = self.get_walls_order(const.FRONT_WALL, num_rotation=2)
+    def get_external_edges(self, external_walls_order, external_sides_order=None):
+        if external_sides_order is None:
+            external_sides_order = self.get_walls_order(const.FRONT_WALL, num_rotation=2)
         external_edges = []
         for wall_name, side in zip(external_walls_order, external_sides_order):
             wall = self.find_wall(wall_name)
@@ -164,16 +169,27 @@ class Cube:
                 return wall
 
     def move(self, notation):
+        edges_corners = self.corners.copy()
+        edges_corners.extend(self.edges.copy())
         move = Move(notation)
         wall_to_move = self.find_wall(move.wall_name)
         wall_to_move.rotate(move)
-        all_pieces = self.corners.copy()
-        all_pieces.extend(self.edges)
-        all_pieces.extend(self.corners)
 
-        pieces_to_move = [piece for piece in all_pieces if piece.contains_wall(move.wall_name)]
+        pieces_to_move = [piece for piece in edges_corners if piece.contains_wall(move.wall_name)]
         for piece in pieces_to_move:
             piece.move(move)
+
+        segments_to_replace = [wall.get_segment_to_replace() for wall in self.walls
+                               if wall.get_segment_to_replace() is not None]
+        if len(segments_to_replace) != 4:
+            raise Exception("Wrong number of segments to be replaced")
+        for segment in segments_to_replace:
+            segment_part: Part = segment[0]
+            wall_to_find = segment_part.wall_name
+            new_wall_for_segment = self.find_wall(wall_to_find)
+            new_wall_for_segment.replace_segment(segment)
+            new_wall_for_segment.update_parts_cords()
+
 
 
 
